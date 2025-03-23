@@ -1,29 +1,69 @@
-const request = require('supertest');
-const app = require('../src/app');
+const request = require("supertest");
+const app = require("../src/app");
 
-describe('GET /api/producers/intervals', () => {
-  it('should return producers with min and max award intervals', async () => {
-    const response = await request(app).get('/api/producers/intervals');
+describe("GET /api/producers/intervals", () => {
+  beforeAll((done) => {
+    setTimeout(() => {
+      done();
+    }, 300);
+  });
+
+  it("It should compare the data returned by the API with the expected data.", async () => {
+    const expectedOutput = {
+      min: [
+        {
+          producer: "Joel Silver",
+          interval: 1,
+          previousWin: 1990,
+          followingWin: 1991,
+        },
+      ],
+      max: [
+        {
+          producer: "Matthew Vaughn",
+          interval: 13,
+          previousWin: 2002,
+          followingWin: 2015,
+        },
+      ],
+    };
+
+    const response = await request(app).get("/api/producers/intervals");
 
     expect(response.statusCode).toBe(200);
-    expect(response.body).toHaveProperty('min');
-    expect(response.body).toHaveProperty('max');
+    expect(response.body).toEqual(expectedOutput);
+  });
 
-    expect(Array.isArray(response.body.min)).toBe(true);
-    expect(Array.isArray(response.body.max)).toBe(true);
+  it("should fail when comparing API response with incorrect expected data (and pass the test)", async () => {
+    const incorrectExpectedOutput = {
+      min: [
+        {
+          producer: "Wrong Producer",
+          interval: 99,
+          previousWin: 1900,
+          followingWin: 1999,
+        },
+      ],
+      max: [
+        {
+          producer: "Wrong Producer",
+          interval: 50,
+          previousWin: 1950,
+          followingWin: 2000,
+        },
+      ],
+    };
 
-    if (response.body.min.length > 0) {
-      expect(response.body.min[0]).toHaveProperty('producer');
-      expect(response.body.min[0]).toHaveProperty('interval');
-      expect(response.body.min[0]).toHaveProperty('previousWin');
-      expect(response.body.min[0]).toHaveProperty('followingWin');
+    const response = await request(app).get("/api/producers/intervals");
+
+    let failedAsExpected = false;
+
+    try {
+      expect(response.body).toEqual(incorrectExpectedOutput);
+    } catch (err) {
+      failedAsExpected = true;
     }
 
-    if (response.body.max.length > 0) {
-      expect(response.body.max[0]).toHaveProperty('producer');
-      expect(response.body.max[0]).toHaveProperty('interval');
-      expect(response.body.max[0]).toHaveProperty('previousWin');
-      expect(response.body.max[0]).toHaveProperty('followingWin');
-    }
+    expect(failedAsExpected).toBe(true);
   });
 });
